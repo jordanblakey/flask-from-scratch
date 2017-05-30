@@ -24,5 +24,7 @@ def articles():
 def article(id):
     return render_template('article.html', id = id)
 
+# @app.route('/')
+
 if __name__ == '__main__':
     app.run(debug=True)
