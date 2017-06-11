@@ -1,5 +1,5 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
-from data import Articles
+# from data import Articles
 from flask_mysqldb import MySQL
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
@@ -15,7 +15,7 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 # Initialize MySQL
 mysql = MySQL(app)
-Articles = Articles()
+# Articles = Articles()
 
 # Index
 @app.route('/')
@@ -30,12 +30,33 @@ def about():
 # Articles
 @app.route('/articles')
 def articles():
-  return render_template('articles.html', articles=Articles)
+  # Create cursor
+  cur = mysql.connection.cursor()
+
+  # Get articles
+  result = cur.execute("SELECT * FROM articles")
+  articles = cur.fetchall()
+
+  if result > 0:
+    return render_template('articles.html', articles=articles)
+  else:
+    msg = 'No Artcles Found'
+    return render_template('articles.html', msg=msg)
+
+  # Close connection
+  cur.close()
 
 # Single Article
 @app.route('/article/<string:id>/')
 def article(id):
-  return render_template('article.html', id=id)
+  # Create cursor
+  cur = mysql.connection.cursor()
+
+  # Get articles
+  result = cur.execute("SELECT * FROM articles WHERE id = %s", [id])
+
+  article = cur.fetchone()
+  return render_template('article.html', article=article)
 
 # Register Form Fields
 class RegisterForm(Form):
@@ -141,7 +162,22 @@ def logout():
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
-  return render_template('dashboard.html')
+  # Create cursor
+  cur = mysql.connection.cursor()
+
+  # Get articles
+  result = cur.execute("SELECT * FROM articles")
+
+  articles = cur.fetchall()
+
+  if result > 0:
+    return render_template('dashboard.html', articles=articles)
+  else:
+    msg = 'No Artcles Found'
+    return render_template('dashboard.html', msg=msg)
+
+  # Close connection
+  cur.close()
 
 # Article Form class
 class ArticleForm(Form):
@@ -174,7 +210,7 @@ def add_article():
 
     return redirect(url_for('dashboard'))
 
-  return render_template('add_article', form=form)
+  return render_template('add_article.html', form=form)
 
 
 if __name__ == '__main__':
